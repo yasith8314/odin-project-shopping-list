@@ -166,7 +166,8 @@
   flex-grow: 1; /* FIX: fills remaining space */
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: left;
+  align-items: start;
 }
 
 .details h2 {
@@ -331,65 +332,110 @@ p {
   animation: scaleUp 0.25s ease;
 }
 
-.modal-content {
-  padding: 20px;
-  overflow-y: auto;
-  color: white;
+/* Container styling (assuming this lives inside a modal) */
+.modal-image {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 12px 12px 0 0;
+  display: block;
 }
 
-.modal-content h2 {
-  margin: 0 0 10px;
-  font-size: 1.5rem;
+/* 1. Remove any fixed heights from the container */
+.modal-content {
+  padding: 24px;
+  background: #1a1a1a;
+  color: #ffffff;
+  /* Use min-height instead of height */
+  min-height: 200px; 
+  /* If the modal is inside a fixed-size overlay, allow internal scrolling */
+  max-height: 400px; 
+  overflow-y: auto; 
+}
+
+/* 2. Ensure the description wraps correctly */
+.modal-content p:last-of-type {
+  margin-top: 16px;
+  line-height: 1.6;
+  white-space: normal; /* Ensures text wraps to next line */
+  word-wrap: break-word; /* Prevents long URLs from breaking layout */
+}
+
+/* 3. Fix the Genre "Cut-off" */
+.modal-content ul {
+  display: flex;
+  flex-wrap: wrap; /* CRITICAL: Allows tags to move to the next line */
+  gap: 8px;
+  padding: 0;
+  margin-top: 20px;
+  list-style: none;
+}
+
+/* Typography */
+h2 {
+  margin: 12px 0 4px 0;
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
 }
 
 .modal-content p {
-  color: #aaa;
-  margin: 5px 0;
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: #a0a0a0; /* De-emphasize metadata */
 }
 
-.modal-close {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-
-  width: 35px;
-  height: 35px;
-
-  border: none;
-  border-radius: 8px;
-
-  background: rgba(255, 255, 255, 0.9);
-  color: black;
-  font-size: 18px;
-  font-weight: bold;
-
-  cursor: pointer;
-  z-index: 10;
+.modal-content li {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
+
+/* Icons Group spacing */
+.PlatformIconGroup {
+  display: flex;
+  gap: 10px;
+  opacity: 0.8;
+}
+
 
 .modal-close:hover {
   background: white;
   transform: scale(1.1);
 }
 
+
 .modal-close {
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 12px;
+  right: 12px;
 
-  width: 35px;
-  height: 35px;
+  width: 36px;
+  height: 36px;
 
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
 
-  background: rgba(255, 255, 255, 0.9);
-  color: black;
+  background: rgba(255, 255, 255, 0.08); /* subtle like cards */
+  color: #fff;
+
   font-size: 18px;
-  font-weight: bold;
+  font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   cursor: pointer;
-  z-index: 10;
+
+  backdrop-filter: blur(6px);
+  transition: all 0.2s ease;
+
+  z-index: 20;
 }
 
 .modal-close:hover {

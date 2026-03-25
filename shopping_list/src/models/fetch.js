@@ -39,7 +39,7 @@ const getGame = async (id, platforms) => {
     const gameData = {}
 
     gameData['name'] = data['name'];
-    gameData['description'] = data['description'];
+    gameData['description'] = data['description_raw'];
     gameData['released'] = data['released'];
     gameData['platforms'] = platforms;
     gameData['images'] = [data['background_image'], data['background_image_additional']];

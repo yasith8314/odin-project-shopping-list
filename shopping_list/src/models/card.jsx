@@ -2,17 +2,11 @@ import "./styles.css"
 import { useState } from "react";
 import { PlatformIconGroup } from "./platforms"
 import GameCard from "./game_card"
-import { createPortal } from "react-dom";
-import { useEffect } from "react";
 
 const Card = ({ data }) => {
     const [isAdded, setAdded] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
+    //const [mounted, setMounted] = useState(false);
 
     const handelClick = (e) => {
         e.stopPropagation();
@@ -48,22 +42,22 @@ const Card = ({ data }) => {
                 <PlatformIconGroup platforms={data['platforms']} />
                 <h2>{data['name']}</h2>
                 <p>{data['released']}</p>
-                <p>{data['id']}</p>
             </div>
         </div> 
 
-            {isOpen && mounted && createPortal(
+        {isOpen &&
                 <div className="modal-overlay" onClick={closeModal}>
                     <div className="modal-card" onClick={(e) => e.stopPropagation()} >
-                        <button className="modal-close" onClick={closeModal}>×</button>
+                        <button className="modal-close" onClick={closeModal}>✕</button>
 
                         <GameCard 
                             id={data.id} 
                             platforms={data.platforms} 
+                            key = {"game-card-" + data.id}
                         />
                     </div>
                 </div>
-            )}
+        }
         </>
     );
 };

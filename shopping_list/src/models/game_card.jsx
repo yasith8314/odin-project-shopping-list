@@ -8,8 +8,6 @@ const GameCard = ({ id, platforms }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (gameData) return;
-
         const getData = async (id, platforms) => {
             const newData = await getGame(id, platforms);
             setGameData(newData);
