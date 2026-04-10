@@ -24,7 +24,12 @@ const MainCard = ({ query, title }) => {
 
             const newData = await getGames(query, page);
 
-            if (newData.length === 0) setDisabled(true);
+            if (newData.length === 0) {
+                setDisabled(true);
+                setLoadingMore(false);
+                setLoading(false);
+                return;
+            }
             else setData(prev => (page === 1 ? newData : combine(prev, newData)));
 
             setLoading(false);
@@ -53,7 +58,7 @@ const MainCard = ({ query, title }) => {
             <h1 className="section-title">{title}</h1>
             <div className="game-grid">
                 {data.map((element) => (
-                    <Card key={element.id} data={element} />
+                    <Card key={element.id} data={element}  />
                 ))}
 
                 {loadingMore && [...Array(20)].map((_, i) => <SkeletonCard key={i} />) }
