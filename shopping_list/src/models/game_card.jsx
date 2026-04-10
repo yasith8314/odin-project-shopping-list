@@ -2,6 +2,7 @@ import "./styles.css"
 import { useState, useEffect } from "react";
 import { PlatformIconGroup } from "./platforms"
 import { getGame } from "./fetch"
+import Slideshow from "./slideshow"
 
 const GameCard = ({ id, platforms }) => {
     const [gameData, setGameData] = useState(null);
@@ -28,23 +29,27 @@ const GameCard = ({ id, platforms }) => {
     }
 
     return (
-            <>
-                <img 
-                    className="modal-image"
-                    src={gameData.images?.[0]} 
-                    alt="game"
-                />
+      <>
+        {gameData.screenshots?.length ==  0 && <img
+          className="modal-image"
+          src={gameData.images?.[0]}
+          alt="game"
+        />}
 
-                <div className="modal-content">
-                    <PlatformIconGroup platforms={gameData['platforms']} />
-                    <h2>{gameData.name}</h2>
-                    <p>{gameData.released}</p>
-                    <p>{gameData.developers}</p>
-                    <p>{gameData.description}</p>
-                    <ul>{gameData['genres']?.map(element => <li>{element}</li>)}</ul>
-                </div>
-            </>
-        )
+        {gameData.screenshots?.length > 0 && 
+          <Slideshow screenshots={[gameData.images?.[0], ...gameData.screenshots]} />
+        }
+        
+        <div className="modal-content">
+          <PlatformIconGroup platforms={gameData['platforms']} />
+          <h2>{gameData.name}</h2>
+          <p>{gameData.released}</p>
+          <p>{gameData.developers}</p>
+          <p>{gameData.description}</p>
+          <ul>{gameData['genres']?.map(element => <li key={element}>{element}</li>)}</ul>
+        </div>
+      </>
+    );
 };
 
 export default GameCard;
