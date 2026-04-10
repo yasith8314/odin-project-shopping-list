@@ -5,7 +5,6 @@ const base_url = import.meta.env.VITE_BASE_URL;
 
 const fetchData = async (query, page=1) => {
     const response = await fetch(`${base_url}/${query}&key=${API_KEY}&page=${page}`)
-    console.log(`${base_url}/${query}&key=${API_KEY}&page=${page}`);    
     const data = await response.json();
 
     return data;
@@ -33,20 +32,30 @@ const getGames = async (query, page=1) => {
     return games;
 }
 
+const getScreenshots = async (id) => {
+    const response = await fetch(`${base_url}/games/${id}/screenshots?key=${API_KEY}`)
+    const data = await response.json()
+    
+    if (!data) return [];
+    return data['results']?.map(element => (!element['is_deleted']) && element['image']);
+}
+
 const getGame = async (id, platforms) => {
     const response = await fetch(`${base_url}/games/${id}?key=${API_KEY}`)
     const data = await response.json()
     const gameData = {}
 
-    gameData['name'] = data['name'];
-    gameData['description'] = data['description_raw'];
-    gameData['released'] = data['released'];
-    gameData['platforms'] = platforms;
-    gameData['images'] = [data['background_image'], data['background_image_additional']];
-    gameData['developers'] = data['developers'][0]['name'];
-    gameData['genres'] = data['genres']?.map(element => element['name']);
-    
+    if (data.length == 0) return { };
 
+    gameData['name'] = data?.name || '';
+    gameData['description'] = data?.description_raw;
+    gameData['released'] = data?.released || '';
+    gameData['platforms'] = platforms;
+    gameData['images'] = [data?.background_image, data?.background_image_additional];
+    gameData['developers'] = data?.developers[0]?.name || '';
+    gameData['genres'] = data?.genres?.map(element => element?.name);
+    gameData['screenshots'] = await getScreenshots(id);
+      
     return gameData;
 }
 
