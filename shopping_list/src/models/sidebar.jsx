@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./styles.css"
+import { Link } from "react-router-dom";
 
 const Sidebar = () => {
     const [isOpen, setOpen] = useState(false);
@@ -22,11 +23,12 @@ const Sidebar = () => {
                 </button>
                 
                 <ul className="sidebar-menu">
-                <li>Dashboard</li>
-                <li>Profile</li>
-                <li>Settings</li>
-                <li>Messages</li>
-                <li>Logout</li>
+                  <li><Link to="/" className="link">Home</Link></li>
+                  <li><Link to="/library" className="link">Library</Link></li>
+                  <li><Link to="/last-30-days" className="link">Last 30 Days</Link></li>
+                  <li><Link to="/next-30-days" className="link">Next 30 Days</Link></li>
+                  <li><Link to="/best-games-of-all-time" className="link">Best Games of All Time</Link></li>
+                  <li><Link to="/best-sellers" className="link">BestSellers</Link></li>
                 </ul>
             </div>
         </>

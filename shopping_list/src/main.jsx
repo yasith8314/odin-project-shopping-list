@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 
 import './index.css'
 import App from './App.jsx'
-import { Last30Days, Next30Days, BestGamesOfTheYear, BestGamesOfAllTime } from './models/all_main_cards'
+import { Last30Days, Next30Days, BestGamesOfTheYear, BestGamesOfAllTime, BestSellers } from './models/all_main_cards'
 import Library from './models/library'
 import { CartContext } from './models/cart.jsx'
 
@@ -23,6 +23,7 @@ const router = createBrowserRouter([
       { path: "/last-30-days", element: <Last30Days />},
       { path: "/next-30-days", element: <Next30Days />},
       { path: "/best-games-of-all-time", element: <BestGamesOfAllTime /> },
+      { path: "/best-sellers", element: <BestSellers /> },
       { path: "/library", element: <Library /> }
     ]
   }
