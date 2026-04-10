@@ -1,25 +1,26 @@
 import './App.css'
 import Sidebar from './models/sidebar'
-import MainCard from './models/main_card'
-import GameCard from './models/game_card'
+import { Link, Outlet } from 'react-router-dom' // <-- Good import
 
 function App() {
-
+  
   return (
-    <> 
+    <div> 
       <nav className='navbar'>
         <h1>Game Shop</h1>
         <div className='div-in-nav'>
-          <div>Home</div>
-          <div>Cart</div>
+          <Link className='link' to="/">Home</Link>
+          <Link className='link' to="/library">Library</Link>
         </div>
       </nav>
 
-      <Sidebar />
+      <Sidebar /> 
       
-      <MainCard query={'games?dates=2026-01-16,2026-03-16'} title={"Games in 2026 so far"} />
-    </>
+      <main>
+         <Outlet /> {/* <-- THIS IS REQUIRED! Child pages will render here */}
+      </main>
+    </div>
   )
 }
 
-export default App
+export default App;
