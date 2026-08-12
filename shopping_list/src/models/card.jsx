@@ -73,6 +73,11 @@ const Card = ({ data }) => {
   };
 
   useEffect(() => {
+    document.body.classList.toggle("modal-open", isOpen);
+    return () => document.body.classList.remove("modal-open");
+  }, [isOpen]);
+
+  useEffect(() => {
     if (!isOpen) return undefined;
     modalRef.current?.focus();
     const closeOnEscape = (event) => {
@@ -86,7 +91,7 @@ const Card = ({ data }) => {
 
   return (
     <>
-      <div className="card" style={{ display: "block" }} onClick={openModal} role="button" tabIndex="0" onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openModal(); } }} ref={triggerRef}>
+      <article className="card" style={{ display: "block" }} onClick={openModal} tabIndex="0" onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openModal(); } }} ref={triggerRef}>
         {/* Cart button */}
         <button className={`cart-card-button ${isAdded ? "added" : ""}`} onClick={handleCartClick} aria-label={isAdded ? "Remove from wishlist" : "Add to wishlist"}>
           {isAdded ? "✓" : "+"}
@@ -110,7 +115,7 @@ const Card = ({ data }) => {
           {ratingData?.reviewCount ? <p className="card-rating" aria-label={`${ratingData.averageRating} out of 5 stars`}>★ {ratingData.averageRating.toFixed(1)} ({ratingData.reviewCount})</p> : null}
           <p>{data.released}</p>
         </div>
-      </div>
+      </article>
 
       {isOpen && (
         <div className="modal-overlay" onClick={closeModal}>

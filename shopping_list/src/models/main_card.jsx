@@ -9,6 +9,11 @@ import "./styles.css";
 
 const INITIAL_LOAD = 20;
 const LOAD_INCREMENT = 20;
+const useDebouncedValue = (value, delay = 300) => {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => { const timer = setTimeout(() => setDebounced(value), delay); return () => clearTimeout(timer); }, [delay, value]);
+  return debounced;
+};
 const MainCard = ({ query, title }) => {
   const [params, setParams] = useSearchParams();
   const [displayCount, setDisplayCount] = useState(INITIAL_LOAD);
@@ -18,7 +23,7 @@ const MainCard = ({ query, title }) => {
   const [sort, setSort] = useState(() => params.get("sort") || "name");
   const [minYear, setMinYear] = useState(() => params.get("from") || "");
   const [maxYear, setMaxYear] = useState(() => params.get("to") || "");
-  const debouncedSearch = search;
+  const debouncedSearch = useDebouncedValue(search);
   const sentinelRef = useRef(null); const observerRef = useRef(null); const mounted = useRef(false);
   useEffect(() => { const timer = setTimeout(() => { const next = {}; if (debouncedSearch) next.search = debouncedSearch; if (platform !== "all") next.platform = platform; if (genre !== "all") next.genre = genre; if (sort !== "name") next.sort = sort; if (minYear) next.from = minYear; if (maxYear) next.to = maxYear; setParams(next, { replace: true }); }, 300); return () => clearTimeout(timer); }, [debouncedSearch, genre, maxYear, minYear, platform, setParams, sort]);
   useEffect(() => { if (!mounted.current) { mounted.current = true; return; } if (debouncedSearch) trackEvent("search", { metadata: { query: debouncedSearch } }); else if (platform !== "all" || genre !== "all" || sort !== "name" || minYear || maxYear) trackEvent("filters_changed", { metadata: { platform, genre, sort, minYear, maxYear } }); }, [debouncedSearch, genre, maxYear, minYear, platform, sort]);

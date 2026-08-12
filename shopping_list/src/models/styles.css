@@ -668,3 +668,34 @@ body.modal-open {
 .social-intro, .share-url { margin: 0 20px 1rem; text-align: left; }.social-form { max-width: 620px; margin: 1rem 20px; }.social-form input { padding: .6rem; color: #eef2ff; background: #151a29; border: 1px solid #3a496e; border-radius: 7px; }
 .public-game-list { max-width: 620px; margin: 1rem 20px 1.5rem; }.public-game-list div { padding: .8rem; border-bottom: 1px solid #2d3854; color: #dce5ff; }.public-game-list span { display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; margin-right: .5rem; border-radius: 50%; background: #a8b9ff; color: #101522; font-weight: 800; }
 .recommendations { padding: 1.25rem clamp(1.5rem, 4vw, 3.5rem) 0; }.recommendations h2 { margin: 0 20px; color: #e7edff; font-size: 1.25rem; }
+.empty-state { max-width: 36rem; margin: 2rem auto !important; padding: 1.25rem; color: #aeb9d7; background: #151d32; border: 1px solid #2d3a5b; border-radius: 12px; text-align: center !important; }
+
+/* Final theme normalization: keep legacy component rules from changing the current UI. */
+html { color-scheme: dark; }
+body { overflow-x: hidden; }
+p { margin: 0; color: inherit; font-size: inherit; text-align: inherit; }
+h1, h2, h3, h4 { color: #eef2ff; }
+.content-area { min-width: 0; width: 100%; }
+.sidebar-toggle { width: 38px; height: 38px; display: grid; place-items: center; padding: 0; border-radius: 10px; background: #151d32; border-color: #3a4b75; }
+.sidebar-header h2 { color: #eef2ff; }
+.sidebar-menu .link { color: #cbd5f2; }
+.sidebar-menu .link:hover, .sidebar-menu .link:focus-visible { color: #fff; background: #2a385e; outline: none; }
+.card { min-height: 0; }
+.card-rating { color: #f4c95d !important; font-weight: 700; }
+.modal-card { position: relative; max-height: min(92vh, 900px); overflow-y: auto; }
+.modal-content { max-height: none; }
+.modal-content h2 { margin-top: .75rem; }
+.modal-content p { color: #aeb9d7; line-height: 1.55; }
+.slide-count { position: absolute; right: .75rem; bottom: .75rem; z-index: 3; padding: .25rem .5rem; border-radius: 999px; color: #eef2ff; background: #090b12b8; font-size: .75rem; }
+.review-form input, .review-form select, .review-form textarea, .social-form input, .social-form textarea { min-height: 44px; }
+.review-form button:focus-visible, .own-review-actions button:focus-visible, .comments button:focus-visible, .clear-filters:focus-visible, .retry-button:focus-visible, .cart-trigger:focus-visible, .modal-close:focus-visible { outline: 3px solid #8ea5ff; outline-offset: 2px; }
+.admin-page { max-width: 1280px; margin-inline: auto; }
+.admin-page h2 { margin: 0 0 .75rem; font-size: 1.25rem; }
+.admin-reviews { padding: 1rem; background: #11182a99; border: 1px solid #293654; border-radius: 14px; }
+.admin-reviews + .admin-reviews { margin-top: 1rem; }
+.admin-reviews ol { margin: 0; padding-left: 1.5rem; color: #cbd5f2; }
+.admin-actions { flex-wrap: wrap; }
+.social-form { background: #151d32; }
+@media (min-width: 769px) { .main-layout { align-items: stretch; }.main-layout > .sidebar { position: sticky; top: 70px; flex: 0 0 250px; transform: none; }.main-layout > .sidebar.closed { margin-left: -250px; }.main-layout > .content-area { flex: 1 1 auto; min-width: 0; } }
+@media (max-width: 720px) { .navbar { position: sticky; }.sidebar { top: 70px; }.main-layout { min-width: 0; }.modal-card { width: calc(100% - 1.5rem); }.modal-content { padding: 1.1rem; }.reviews-heading { align-items: flex-start; flex-direction: column; }.admin-page { padding-inline: 1rem; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }

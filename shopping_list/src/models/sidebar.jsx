@@ -12,29 +12,19 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Toggle button – always visible */}
-      <button className="sidebar-toggle" onClick={toggleSideBar}>
-        {isOpen ? "◀" : "▶"}
-      </button>
-
-      {/* Overlay (only on mobile when open) */}
-      {isOpen && (
-        <div className="sidebar-overlay" onClick={toggleSideBar}></div>
-      )}
-
       {/* Sidebar itself */}
-      <aside className={`sidebar ${isOpen ? "open" : "closed"}`}>
+      <aside id="app-sidebar" className={`sidebar ${isOpen ? "open" : "closed"}`} aria-label="Main navigation">
         <div className="sidebar-header">
           <h2>Menu</h2>
         </div>
         <ul className="sidebar-menu">
           <li>
-            <Link to="/" className="link" onClick={toggleSideBar}>
+            <Link to="/" className="link" onClick={() => setOpen(false)}>
               Home
             </Link>
           </li>
           <li>
-            <Link to="/library" className="link" onClick={toggleSideBar}>
+            <Link to="/library" className="link" onClick={() => setOpen(false)}>
               Library
             </Link>
           </li>
@@ -42,18 +32,24 @@ const Sidebar = () => {
             <Link
               to="/best-games-of-all-time"
               className="link"
-              onClick={toggleSideBar}
+              onClick={() => setOpen(false)}
             >
               Best Games
             </Link>
           </li>
           <li>
-            <Link to="/best-sellers" className="link" onClick={toggleSideBar}>
+            <Link to="/best-sellers" className="link" onClick={() => setOpen(false)}>
               Best Sellers
             </Link>
           </li>
         </ul>
       </aside>
+
+      {/* Overlay and toggle stay above the drawer on small screens. */}
+      {isOpen && <div className="sidebar-overlay" onClick={toggleSideBar}></div>}
+      <button className="sidebar-toggle" onClick={toggleSideBar} aria-expanded={isOpen} aria-controls="app-sidebar" aria-label={isOpen ? "Close navigation" : "Open navigation"}>
+        {isOpen ? "◀" : "▶"}
+      </button>
     </>
   );
 };

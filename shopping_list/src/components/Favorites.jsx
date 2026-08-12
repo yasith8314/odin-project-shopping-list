@@ -9,28 +9,28 @@ const Favorites = () => {
   const { user } = useAuth();
   const [favoriteGames, setFavoriteGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchFavorites = async () => {
-      if (
-        !user ||
-        !user.preferences ||
-        user.preferences.favorites.length === 0
-      ) {
+      const favorites = Array.isArray(user?.preferences?.favorites) ? user.preferences.favorites : [];
+      if (!user || favorites.length === 0) {
         setFavoriteGames([]);
         setLoading(false);
         return;
       }
 
       setLoading(true);
+      setError("");
       try {
-        const allGames = await getGames("games", 1);
+        const allGames = await getGames("games");
         const filtered = allGames.filter((game) =>
-          user.preferences.favorites.includes(game.id),
+          favorites.includes(game.id),
         );
         setFavoriteGames(filtered);
       } catch (err) {
         console.error(err);
+        setError("We couldn't load your favorites right now.");
       } finally {
         setLoading(false);
       }
@@ -56,9 +56,7 @@ const Favorites = () => {
     return (
       <div className="main-container">
         <h1>⭐ Your Favorites</h1>
-        <p style={{ textAlign: "center", padding: "2rem" }}>
-          You haven't added any favorites yet. ❤️
-        </p>
+        {error ? <div className="state-message error-message"><p>{error}</p></div> : <p className="empty-state">You haven't added any favorites yet. ❤️</p>}
       </div>
     );
   }
