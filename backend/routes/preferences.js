@@ -5,6 +5,18 @@ const User = require("../models/User");
 const router = express.Router();
 router.use(auth);
 
+const parseFavorites = (favorites) => {
+  if (Array.isArray(favorites)) return favorites;
+  if (typeof favorites !== "string") return [];
+
+  try {
+    const parsed = JSON.parse(favorites);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
 router.get("/", async (req, res) => {
   try {
     const user = await User.findById(req.userId);
@@ -13,6 +25,7 @@ router.get("/", async (req, res) => {
       favorites: user.favorites || [],
       platform: user.platform || "all",
       theme: user.theme || "dark",
+      role: user.role || "user",
     });
   } catch (err) {
     console.error(err);
@@ -34,7 +47,7 @@ router.put("/", async (req, res) => {
       return res.status(400).json({ error: "No fields to update" });
 
     res.json({
-      favorites: updatedUser.favorites ? JSON.parse(updatedUser.favorites) : [],
+      favorites: parseFavorites(updatedUser.favorites),
       platform: updatedUser.platform || "all",
       theme: updatedUser.theme || "dark",
     });
@@ -61,7 +74,8 @@ router.post("/favorites/toggle", async (req, res) => {
 // GET /api/preferences/favorites/check/:gameId
 router.get("/favorites/check/:gameId", async (req, res) => {
   try {
-    const gameId = parseInt(req.params.gameId);
+    const gameId = Number(req.params.gameId);
+    if (!Number.isInteger(gameId) || gameId < 1) return res.status(400).json({ error: "A valid gameId is required" });
     const favorites = await User.getFavorites(req.userId);
     const isFavorite = favorites.includes(gameId);
     res.json({ isFavorite });

@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
         api
           .get("/preferences")
           .then((res) => {
-            setUser({ ...parsedUser, preferences: res.data });
+            setUser({ ...parsedUser, role: res.data.role || parsedUser.role || "user", preferences: res.data });
             setLoading(false);
           })
           .catch(() => {

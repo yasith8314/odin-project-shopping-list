@@ -10,14 +10,29 @@ import {
   BestGamesOfTheYear,
 } from "./models/all_main_cards";
 import { CartProvider } from "./models/cart";
+import { ToastProvider } from "./context/ToastContext";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Admin from "./components/Admin";
+import SocialHub from "./components/SocialHub";
+import PublicList from "./components/PublicList";
+import { LanguageProvider } from "./context/LanguageContext";
+import AdminRoute from "./components/AdminRoute";
+
+const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 5 * 60 * 1000, retry: 2, retryDelay: (attempt) => 500 * (attempt + 1) } } });
 
 function App() {
   return (
+    <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+    <ToastProvider>
+    <LanguageProvider>
     <AuthProvider>
       <CartProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/lists/:token" element={<PublicList />} />
 
           {/* Protected routes with layout */}
           <Route path="/" element={<ProtectedLayout />}>
@@ -31,7 +46,9 @@ function App() {
                 </>
               }
             />
-            <Route path="favorites" element={<Favorites />} />
+          <Route path="favorites" element={<Favorites />} />
+          <Route element={<AdminRoute />}><Route path="admin" element={<Admin />} /></Route>
+          <Route path="social" element={<SocialHub />} />
             <Route
               path="best-games-of-all-time"
               element={<BestGamesOfAllTime />}
@@ -41,6 +58,10 @@ function App() {
         </Routes>
       </CartProvider>
     </AuthProvider>
+    </LanguageProvider>
+    </ToastProvider>
+    </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

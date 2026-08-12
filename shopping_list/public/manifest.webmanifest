@@ -1,0 +1,10 @@
+{
+  "name": "GameScout",
+  "short_name": "GameScout",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090b12",
+  "theme_color": "#090b12",
+  "description": "Discover free-to-play games and share your favourites.",
+  "icons": [{ "src": "/pwa-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

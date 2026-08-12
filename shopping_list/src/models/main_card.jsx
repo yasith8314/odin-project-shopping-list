@@ -1,103 +1,36 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import Card from "./card";
 import { getGames } from "./fetch";
 import { SkeletonCard } from "./skeletonCard";
+import { trackEvent } from "../analytics";
 import "./styles.css";
 
 const INITIAL_LOAD = 20;
 const LOAD_INCREMENT = 20;
-
 const MainCard = ({ query, title }) => {
-  const [fullData, setFullData] = useState([]);
+  const [params, setParams] = useSearchParams();
   const [displayCount, setDisplayCount] = useState(INITIAL_LOAD);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [platform, setPlatform] = useState("all");
-  const [genre, setGenre] = useState("all");
-  const [sort, setSort] = useState("name");
-  const observerRef = useRef(null);
-  const sentinelRef = useRef(null);
-
-  useEffect(() => {
-    let active = true;
-    async function loadGames() {
-      setLoading(true);
-      setError("");
-      setDisplayCount(INITIAL_LOAD);
-      try {
-        const games = await getGames(query);
-        if (active) setFullData(games);
-      } catch (loadError) {
-        if (active) {
-          setFullData([]);
-          setError(loadError.message);
-        }
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-    loadGames();
-    return () => { active = false; };
-  }, [query]);
-
-  const genres = useMemo(
-    () => [...new Set(fullData.map((game) => game.genre).filter(Boolean))].sort(),
-    [fullData],
-  );
-
-  const filteredData = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return fullData
-      .filter((game) => !term || game.name.toLowerCase().includes(term))
-      .filter((game) => platform === "all" || game.platforms.includes(platform))
-      .filter((game) => genre === "all" || game.genre === genre)
-      .sort((a, b) => {
-        if (sort === "newest") return new Date(b.released) - new Date(a.released);
-        if (sort === "oldest") return new Date(a.released) - new Date(b.released);
-        return a.name.localeCompare(b.name);
-      });
-  }, [fullData, genre, platform, search, sort]);
-
-  useEffect(() => setDisplayCount(INITIAL_LOAD), [search, platform, genre, sort]);
-
+  const [search, setSearch] = useState(() => params.get("search") || "");
+  const [platform, setPlatform] = useState(() => params.get("platform") || "all");
+  const [genre, setGenre] = useState(() => params.get("genre") || "all");
+  const [sort, setSort] = useState(() => params.get("sort") || "name");
+  const [minYear, setMinYear] = useState(() => params.get("from") || "");
+  const [maxYear, setMaxYear] = useState(() => params.get("to") || "");
+  const debouncedSearch = search;
+  const sentinelRef = useRef(null); const observerRef = useRef(null); const mounted = useRef(false);
+  useEffect(() => { const timer = setTimeout(() => { const next = {}; if (debouncedSearch) next.search = debouncedSearch; if (platform !== "all") next.platform = platform; if (genre !== "all") next.genre = genre; if (sort !== "name") next.sort = sort; if (minYear) next.from = minYear; if (maxYear) next.to = maxYear; setParams(next, { replace: true }); }, 300); return () => clearTimeout(timer); }, [debouncedSearch, genre, maxYear, minYear, platform, setParams, sort]);
+  useEffect(() => { if (!mounted.current) { mounted.current = true; return; } if (debouncedSearch) trackEvent("search", { metadata: { query: debouncedSearch } }); else if (platform !== "all" || genre !== "all" || sort !== "name" || minYear || maxYear) trackEvent("filters_changed", { metadata: { platform, genre, sort, minYear, maxYear } }); }, [debouncedSearch, genre, maxYear, minYear, platform, sort]);
+  const { data: fullData = [], isLoading: loading, error, refetch } = useQuery({ queryKey: ["games", query], queryFn: () => getGames(query) });
+  const genres = useMemo(() => [...new Set(fullData.map((game) => game.genre).filter(Boolean))].sort(), [fullData]);
+  const filteredData = useMemo(() => fullData.filter((game) => !debouncedSearch || game.name.toLowerCase().includes(debouncedSearch.toLowerCase())).filter((game) => platform === "all" || game.platforms.includes(platform)).filter((game) => genre === "all" || game.genre === genre).filter((game) => !minYear || Number(game.released?.slice(0, 4)) >= Number(minYear)).filter((game) => !maxYear || Number(game.released?.slice(0, 4)) <= Number(maxYear)).sort((a, b) => sort === "newest" ? new Date(b.released) - new Date(a.released) : sort === "oldest" ? new Date(a.released) - new Date(b.released) : a.name.localeCompare(b.name)), [debouncedSearch, fullData, genre, maxYear, minYear, platform, sort]);
+  useEffect(() => { queueMicrotask(() => setDisplayCount(INITIAL_LOAD)); }, [debouncedSearch, platform, genre, sort, minYear, maxYear]);
   const hasMore = displayCount < filteredData.length;
-  const handleObserver = useCallback((entries) => {
-    if (entries[0].isIntersecting) {
-      setDisplayCount((count) => Math.min(count + LOAD_INCREMENT, filteredData.length));
-    }
-  }, [filteredData.length]);
-
-  useEffect(() => {
-    if (loading || !hasMore || !sentinelRef.current) return undefined;
-    observerRef.current?.disconnect();
-    observerRef.current = new IntersectionObserver(handleObserver, { rootMargin: "200px" });
-    observerRef.current.observe(sentinelRef.current);
-    return () => observerRef.current?.disconnect();
-  }, [handleObserver, hasMore, loading]);
-
+  const handleObserver = useCallback((entries) => { if (entries[0].isIntersecting) setDisplayCount((count) => Math.min(count + LOAD_INCREMENT, filteredData.length)); }, [filteredData.length]);
+  useEffect(() => { if (loading || !hasMore || !sentinelRef.current) return undefined; observerRef.current?.disconnect(); observerRef.current = new IntersectionObserver(handleObserver, { rootMargin: "200px" }); observerRef.current.observe(sentinelRef.current); return () => observerRef.current?.disconnect(); }, [handleObserver, hasMore, loading]);
+  const clearFilters = () => { setSearch(""); setPlatform("all"); setGenre("all"); setSort("name"); setMinYear(""); setMaxYear(""); };
   const visibleData = filteredData.slice(0, displayCount);
-
-  return (
-    <section className="main-container">
-      <div className="section-heading">
-        <p className="eyebrow">DISCOVER YOUR NEXT FAVORITE</p>
-        <h1 className="section-title">{title}</h1>
-      </div>
-      <div className="discovery-controls" aria-label="Game filters">
-        <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search games…" aria-label="Search games" />
-        <select value={platform} onChange={(event) => setPlatform(event.target.value)} aria-label="Platform"><option value="all">All platforms</option><option value="pc">PC</option><option value="web">Browser</option></select>
-        <select value={genre} onChange={(event) => setGenre(event.target.value)} aria-label="Genre"><option value="all">All genres</option>{genres.map((item) => <option key={item} value={item}>{item}</option>)}</select>
-        <select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort games"><option value="name">Name: A–Z</option><option value="newest">Newest releases</option><option value="oldest">Oldest releases</option></select>
-      </div>
-      {loading && !fullData.length ? <div className="game-grid">{Array.from({ length: 12 }, (_, index) => <SkeletonCard key={index} />)}</div> : null}
-      {error ? <p className="state-message error-message">{error}</p> : null}
-      {!loading && !error && !visibleData.length ? <p className="state-message">No games match these filters.</p> : null}
-      <div className="game-grid">{visibleData.map((game) => <Card key={game.id} data={game} />)}</div>
-      {hasMore ? <div ref={sentinelRef} className="scroll-sentinel" /> : null}
-      {!loading && !error && filteredData.length > 0 && !hasMore ? <p className="end-message">You've seen all {filteredData.length} games.</p> : null}
-    </section>
-  );
+  return <section className="main-container"><div className="section-heading"><p className="eyebrow">DISCOVER YOUR NEXT FAVORITE</p><h1 className="section-title">{title}</h1></div><div className="discovery-controls" aria-label="Game filters"><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search games..." aria-label="Search games" /><select value={platform} onChange={(event) => setPlatform(event.target.value)} aria-label="Platform"><option value="all">All platforms</option><option value="pc">PC</option><option value="web">Browser</option></select><select value={genre} onChange={(event) => setGenre(event.target.value)} aria-label="Genre"><option value="all">All genres</option>{genres.map((item) => <option key={item} value={item}>{item}</option>)}</select><select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort games"><option value="name">Name: A-Z</option><option value="newest">Newest releases</option><option value="oldest">Oldest releases</option></select><input type="number" value={minYear} onChange={(event) => setMinYear(event.target.value)} placeholder="From year" aria-label="From release year" /><input type="number" value={maxYear} onChange={(event) => setMaxYear(event.target.value)} placeholder="To year" aria-label="To release year" /><button className="clear-filters" onClick={clearFilters}>Clear filters</button></div>{loading && !fullData.length ? <div className="game-grid">{Array.from({ length: 12 }, (_, index) => <SkeletonCard key={index} />)}</div> : null}{error ? <div className="state-message error-message"><p>{error.message}</p><button className="retry-button" onClick={() => refetch()}>Try again</button></div> : null}{!loading && !error && !visibleData.length ? <div className="state-message"><p>No games match these filters.</p><button className="retry-button" onClick={clearFilters}>Clear filters</button></div> : null}<div className="game-grid">{visibleData.map((game) => <Card key={game.id} data={game} />)}</div>{hasMore ? <div ref={sentinelRef} className="scroll-sentinel" /> : null}{!loading && !error && filteredData.length > 0 && !hasMore ? <p className="end-message">You've seen all {filteredData.length} games.</p> : null}</section>;
 };
-
 export default MainCard;

@@ -55,6 +55,7 @@ router.post("/signup", async (req, res) => {
           platform: newUser.platform || "all",
           theme: newUser.theme || "dark",
         },
+        role: "user",
       },
     });
   } catch (err) {
@@ -94,6 +95,7 @@ router.post("/login", async (req, res) => {
           platform: user.platform || "all",
           theme: user.theme || "dark",
         },
+        role: user.role || "user",
       },
     });
   } catch (err) {

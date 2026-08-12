@@ -1,112 +1,47 @@
-// import { useQuery } from '@tanstack/react-query';
+const apiBase = import.meta.env.VITE_API_URL || "/api";
 
-// No API key required for FreeToGame
-const base_url = "https://www.freetogame.com/api";
+const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
-/**
- * Generic fetch function.
- * Removes API key and page parameter (FreeToGame doesn't support pagination).
- */
-const fetchData = async (query) => {
-  // query is like "games" or "games?category=shooter"
-  const response = await fetch(`${base_url}/${query}`);
-  if (!response.ok) throw new Error("We couldn't load games right now. Please try again.");
-  const data = await response.json();
-  return data;
+const fetchData = async (query, attempts = 3) => {
+  let lastError;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const response = await fetch(`${apiBase}/games?query=${encodeURIComponent(query)}`);
+      if (!response.ok) throw new Error("Game data is unavailable right now.");
+      return await response.json();
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts - 1) await wait(400 * (attempt + 1));
+    }
+  }
+  throw lastError || new Error("We couldn't load games right now. Please try again.");
 };
 
-/**
- * Returns a list of games with mapped fields.
- * FreeToGame returns an array directly (not inside "results").
- */
+const normalizePlatform = (platform) => {
+  if (platform === "Web Browser") return "web";
+  if (platform?.includes("PC")) return "pc";
+  if (platform === "Xbox") return "xbox";
+  return platform?.toLowerCase() || "";
+};
+
 const getGames = async (query) => {
   const data = await fetchData(query);
-
-  // FreeToGame API returns an array of games
-  const gameData = Array.isArray(data) ? data : [];
-
-  const games = [];
-  for (let i = 0; i < gameData.length; i++) {
-    const game = gameData[i];
-    // Skip if no thumbnail (similar to background_image check)
-    if (!game.thumbnail) continue;
-
-    // Map fields to match the old structure
-    const item = {
-      id: game.id,
-      name: game.title,
-      image_url: game.thumbnail,
-      released: game.release_date,
-      // FreeToGame 'platform' is a string like "PC (Windows)"
-      // Convert to array for consistency (could split if comma-separated)
-      platforms: game.platform ? [game.platform] : [],
-      genre: game.genre || "Other",
-      publisher: game.publisher || "",
-      description: game.short_description || "",
-    };
-
-    if (item.platforms[0] === "Web Browser") {
-      item.platforms[0] = "web";
-    } else if (item.platforms[0] === "PC (Windows)") {
-      item.platforms[0] = "pc";
-    } else if (item.platforms[0] === "Xbox") {
-      item.platforms[0] = "xbox";
-    }
-
-    games.push(item);
-  }
-
-  return games;
+  return (Array.isArray(data) ? data : []).filter((game) => game.thumbnail).map((game) => ({
+    id: game.id, name: game.title, image_url: game.thumbnail, released: game.release_date,
+    platforms: game.platform ? [normalizePlatform(game.platform)] : [], genre: game.genre || "Other",
+    publisher: game.publisher || "", description: game.short_description || "",
+  }));
 };
 
-/**
- * No longer uses a separate screenshots endpoint;
- * screenshots are taken from the game details response.
- */
 const getGame = async (id, platforms) => {
-  // Fetch game details from /game?id=...
-  const response = await fetch(`${base_url}/game?id=${id}`);
-  if (!response.ok) throw new Error("We couldn't load this game's details.");
-  const data = await response.json();
-
-  if (!data || Object.keys(data).length === 0) {
-    return {};
-  }
-
-  // Build the game object with the same property names as before
-  const gameData = {
-    name: data.title || "",
-    description: data.description || data.short_description || "",
-    released: data.release_date || "",
-    // Use the platforms passed from getGames (which we already mapped)
-    platforms: platforms || [],
-    // Images: use thumbnail as first, and maybe the first screenshot as second
-    images: [
-      data.thumbnail || "",
-      data.screenshots && data.screenshots.length > 0
-        ? data.screenshots[0].image
-        : "",
-    ],
-    developers: data.developer || "",
-    // Genres: convert single string to array
-    genres: data.genre ? [data.genre] : [],
-    // Screenshots: extract from the game details
-    screenshots: data.screenshots
-      ? data.screenshots.map((s) => s.image).filter(Boolean)
-      : [],
+  const data = await fetchData(`game?id=${id}`);
+  if (!data || Object.keys(data).length === 0) return {};
+  return {
+    name: data.title || "", description: data.description || data.short_description || "", released: data.release_date || "",
+    platforms: platforms || [], images: [data.thumbnail || "", data.screenshots?.[0]?.image || ""],
+    developers: data.developer || "", genres: data.genre ? [data.genre] : [],
+    screenshots: data.screenshots?.map((screenshot) => screenshot.image).filter(Boolean) || [],
   };
-
-  for (const key in gameData["platforms"]) {
-    if (gameData["platforms"][key].includes("Web Browser")) {
-      gameData["platforms"][key] = "web";
-    } else if (gameData["platforms"][key].includes("PC")) {
-      gameData["platforms"][key] = "pc";
-    } else if (gameData["platforms"][key].includes("Xbox")) {
-      gameData["platforms"][key] = "xbox";
-    }
-  }
-
-  return gameData;
 };
 
 export { fetchData, getGames, getGame };

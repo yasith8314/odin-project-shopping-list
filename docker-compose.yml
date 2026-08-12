@@ -1,0 +1,36 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: gameapp
+      MYSQL_ROOT_PASSWORD: change-me
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./backend/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pchange-me"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+  backend:
+    build: ./backend
+    environment:
+      PORT: 5000
+      JWT_SECRET: change-this-in-production
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: change-me
+      MYSQL_DATABASE: gameapp
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+  frontend:
+    build: ./shopping_list
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+volumes:
+  mysql-data:

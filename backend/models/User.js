@@ -10,7 +10,7 @@ const User = {
 
   findById: async (id) => {
     const [rows] = await pool.query(
-      "SELECT id, email, favorites, platform, theme FROM users WHERE id = ?",
+      "SELECT id, email, favorites, platform, theme, role FROM users WHERE id = ?",
       [id],
     );
     if (!rows[0]) return null;
