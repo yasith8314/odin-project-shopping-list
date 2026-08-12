@@ -1,5 +1,6 @@
 import MainCard from "./main_card";
 import RecentlyViewed from "../components/RecentlyViewed";
+import Recommendations from "../components/Recommendations";
 
 // Map to FreeToGame parameters:
 // - "sort-by" instead of "sort"
@@ -9,6 +10,7 @@ const BestSellers = () => {
   // Popularity as a proxy for "best sellers"
   return <>
     <RecentlyViewed />
+    <Recommendations />
     <MainCard
       query="games?category=mmorpg&sort-by=popularity"
       title={"Best Sellers"}

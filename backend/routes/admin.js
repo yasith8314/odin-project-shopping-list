@@ -18,4 +18,12 @@ router.delete("/reviews/:id", async (req, res) => { await pool.query("DELETE FRO
 router.get("/comments", async (req, res) => { const [rows] = await pool.query("SELECT c.id, c.game_id AS gameId, c.body, c.created_at AS createdAt, u.email FROM game_comments c JOIN users u ON u.id = c.user_id ORDER BY c.created_at DESC LIMIT 100"); res.json(rows); });
 router.delete("/comments/:id", async (req, res) => { await pool.query("DELETE FROM game_comments WHERE id = ?", [req.params.id]); res.status(204).end(); });
 router.post("/cache/refresh", (req, res) => { clearCache(); res.status(204).end(); });
+router.get("/analytics", async (req, res) => {
+  const [[eventTypes], [games], [searches]] = await Promise.all([
+    pool.query("SELECT event_type AS eventType, COUNT(*) AS count FROM analytics_events GROUP BY event_type ORDER BY count DESC"),
+    pool.query("SELECT game_id AS gameId, COUNT(*) AS views FROM analytics_events WHERE event_type = 'game_view' AND game_id IS NOT NULL GROUP BY game_id ORDER BY views DESC LIMIT 10"),
+    pool.query("SELECT JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.query')) AS query, COUNT(*) AS count FROM analytics_events WHERE event_type = 'search' AND JSON_EXTRACT(metadata, '$.query') IS NOT NULL GROUP BY query ORDER BY count DESC LIMIT 10"),
+  ]);
+  res.json({ eventTypes, popularGames: games, topSearches: searches });
+});
 module.exports = router;

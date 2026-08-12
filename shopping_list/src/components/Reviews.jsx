@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import { trackEvent } from "../analytics";
 
 const getReviews = async (gameId) => (await api.get(`/reviews?gameId=${gameId}`)).data;
 
@@ -38,6 +39,7 @@ const Reviews = ({ gameId }) => {
       const payload = { gameId, rating: Number(rating), comment };
       if (editingId) await api.put(`/reviews/${editingId}`, payload);
       else await api.post("/reviews", payload);
+      if (!editingId) trackEvent("review_created", { gameId });
       await refresh();
       resetForm();
       showToast(editingId ? "Review updated." : "Review published.");

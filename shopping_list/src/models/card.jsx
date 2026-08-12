@@ -8,6 +8,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import api from "../api";
 import { useToast } from "../context/ToastContext";
 import { useQuery } from "@tanstack/react-query";
+import { trackEvent } from "../analytics";
 
 const Card = ({ data }) => {
   // ---------- CART logic ----------
@@ -21,6 +22,7 @@ const Card = ({ data }) => {
   const handleCartClick = (e) => {
     e.stopPropagation();
     toggleCartItem(data);
+    trackEvent(isAdded ? "wishlist_remove" : "wishlist_add", { gameId: data.id });
     showToast(isAdded ? "Removed from wishlist." : "Added to wishlist.");
   };
 
@@ -39,6 +41,7 @@ const Card = ({ data }) => {
     setFavLoading(true);
     try {
       await api.post("/preferences/favorites/toggle", { gameId: data.id });
+      trackEvent(isFavorited ? "favorite_remove" : "favorite_add", { gameId: data.id });
       await refreshPreferences();
       showToast(isFavorited ? "Removed from favorites." : "Added to favorites.");
     } catch (err) {

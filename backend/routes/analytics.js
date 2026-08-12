@@ -3,7 +3,7 @@ const auth = require("../middleware/auth");
 const AnalyticsEvent = require("../models/AnalyticsEvent");
 
 const router = express.Router();
-const ALLOWED_EVENTS = new Set(["game_view", "search", "filters_changed"]);
+const ALLOWED_EVENTS = new Set(["game_view", "search", "filters_changed", "favorite_add", "favorite_remove", "wishlist_add", "wishlist_remove", "review_created", "page_view"]);
 const MAX_METADATA_LENGTH = 100;
 
 const positiveInteger = (value) => {
