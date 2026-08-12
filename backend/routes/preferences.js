@@ -48,7 +48,7 @@ router.put("/", async (req, res) => {
 router.post("/favorites/toggle", async (req, res) => {
   try {
     const { gameId } = req.body;
-    if (!gameId) return res.status(400).json({ error: "gameId is required" });
+    if (!Number.isInteger(gameId) || gameId < 1) return res.status(400).json({ error: "A valid gameId is required" });
 
     const favorites = await User.toggleFavorite(req.userId, gameId);
     res.json({ favorites });
