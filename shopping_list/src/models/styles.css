@@ -613,3 +613,45 @@ body.modal-open {
 .nav:hover {
     background: rgba(0, 0, 0, 0.8);
 }
+
+.app { min-height: 100vh; background: radial-gradient(circle at 80% -10%, #283b72 0, transparent 32%), #090b12; }
+.navbar { position: sticky; top: 0; z-index: 1500; min-height: 70px; padding: .8rem clamp(1rem, 4vw, 3rem); background: #090b12ed; backdrop-filter: blur(18px); border-bottom: 1px solid #27304a; }
+.nav-left .brand { color: #a8b9ff; letter-spacing: -.04em; font-size: 1.45rem; }.nav-link { color: #bec7e4; }.nav-link:hover { color: #fff; }.nav-right { gap: .8rem; }
+.main-layout { margin-top: 0; }.main-layout main { padding: 0; background: transparent; }.main-container { min-height: calc(100vh - 70px); padding: clamp(1.5rem, 4vw, 3.5rem); background: transparent; }
+.section-heading { margin: 0 20px 1.2rem; }.eyebrow { margin: 0 0 .45rem; color: #92a5ee; font-size: .72rem; font-weight: 800; letter-spacing: .16em; text-align: left; }.section-title { margin: 0; font-family: inherit; font-size: clamp(2rem, 4vw, 3.25rem); letter-spacing: -.055em; }
+.discovery-controls { display: grid; grid-template-columns: minmax(200px, 1.6fr) repeat(3, minmax(130px, .6fr)); gap: .75rem; margin: 0 20px 1.1rem; }.discovery-controls input, .discovery-controls select { width: 100%; min-height: 44px; padding: 0 .85rem; color: #eaf0ff; background: #151a29; border: 1px solid #2d3858; border-radius: 9px; outline: none; }.discovery-controls input:focus, .discovery-controls select:focus { border-color: #8aa1ff; box-shadow: 0 0 0 3px #738dff2b; }
+.game-grid { padding: 20px; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(235px, 1fr)); }.card { height: auto; min-height: 250px; background: #151a29; border: 1px solid #2a3450; border-radius: 14px; cursor: pointer; }.card:hover { border-color: #728bdf; }.card img { aspect-ratio: 16 / 9; }.details { padding: .85rem 1rem 1rem; }.details h2 { font-size: 1rem; }.details p { margin-top: .35rem; text-align: left; font-size: .82rem; }
+.card button.cart-card-button { top: 10px; left: 10px; right: auto; background: #f5f7ff; }.card button.favorite-btn { top: 10px; right: 10px; background: #151a29de; color: #c6d0ee; }.card button.favorite-btn:disabled { opacity: .5; cursor: wait; }.state-message, .end-message { margin: 2rem auto; color: #aeb9d7; }.error-message { color: #ff9aa8; }.scroll-sentinel { height: 1px; }
+.cart-menu { position: relative; }.cart-trigger { padding: .45rem .7rem; border: 1px solid #3b4a70; border-radius: 7px; color: #eef2ff; background: #1d263d; }.cart-trigger span { display: inline-grid; place-items: center; min-width: 1.25rem; height: 1.25rem; margin-left: .3rem; border-radius: 999px; color: #101522; background: #a8b9ff; font-size: .76rem; font-weight: 800; }.cart-panel { position: absolute; top: calc(100% + .7rem); right: 0; width: min(360px, calc(100vw - 2rem)); padding: 1rem; background: #171d2e; border: 1px solid #394665; border-radius: 12px; box-shadow: 0 20px 50px #0008; }.cart-panel-header { display: flex; align-items: center; justify-content: space-between; }.cart-panel-header button, .cart-panel li button { border: 0; color: #cbd5f6; background: transparent; font-size: 1.25rem; }.cart-panel p { margin: 1rem 0 0; font-size: .9rem; }.cart-panel ul { margin: 1rem 0 0; padding: 0; list-style: none; }.cart-panel li { display: grid; grid-template-columns: 54px 1fr 25px; align-items: center; gap: .7rem; padding: .55rem 0; border-top: 1px solid #303a58; }.cart-panel li img { width: 54px; height: 34px; object-fit: cover; border-radius: 4px; }.cart-panel li span { font-size: .9rem; }
+@media (max-width: 800px) { .discovery-controls { grid-template-columns: 1fr 1fr; }.discovery-controls input { grid-column: 1 / -1; }.sidebar { top: 70px; height: calc(100vh - 70px); }.sidebar-toggle { top: 82px; }.section-heading, .discovery-controls, .game-grid { margin-left: 0; margin-right: 0; } }
+@media (max-width: 560px) { .navbar { padding: .75rem 1rem; }.nav-center { order: 3; width: 100%; justify-content: center; gap: 1rem; }.nav-right { margin-left: auto; }.user-email { display: none; }.main-container { padding: 1.25rem; }.discovery-controls { grid-template-columns: 1fr; }.game-grid { padding: 12px 0; grid-template-columns: 1fr; } }
+
+/* Navbar layout is isolated from the card and sidebar styles above. */
+.navbar {
+    display: grid;
+    grid-template-columns: minmax(130px, 1fr) auto minmax(130px, 1fr);
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+.nav-left, .nav-right, .nav-center { min-width: 0; }
+.nav-center { display: flex; justify-content: center; gap: 1.35rem; }
+.nav-right { display: flex; justify-content: flex-end; align-items: center; gap: .7rem; }
+.nav-link { white-space: nowrap; text-decoration: none; }
+.user-email { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.logout-btn { padding: .48rem .75rem; border: 1px solid #765060; border-radius: 7px; color: #fff; background: #a83d57; white-space: nowrap; }
+.logout-btn:hover { background: #c14967; }
+
+@media (max-width: 720px) {
+    .navbar { grid-template-columns: 1fr auto; }
+    .nav-center { grid-column: 1 / -1; grid-row: 2; justify-content: flex-start; overflow-x: auto; padding-bottom: .15rem; }
+    .user-email { display: none; }
+}
+
+@media (max-width: 420px) {
+    .navbar { gap: .65rem; }
+    .nav-left .brand { font-size: 1.25rem; }
+    .cart-trigger { padding: .42rem .55rem; }
+    .logout-btn { padding: .42rem .6rem; }
+}

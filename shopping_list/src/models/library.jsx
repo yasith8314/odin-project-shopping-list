@@ -1,5 +1,4 @@
 import Card from './card'
-import { useState, useEffect } from 'react';
 import './styles.css'
 import { useContext } from "react";
 import { CartContext } from "./cart.jsx" 

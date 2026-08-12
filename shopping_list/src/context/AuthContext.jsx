@@ -30,11 +30,13 @@ export function AuthProvider({ children }) {
       } catch {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        setUser(null);
-        setLoading(false);
+        Promise.resolve().then(() => {
+          setUser(null);
+          setLoading(false);
+        });
       }
     } else {
-      setLoading(false);
+      Promise.resolve().then(() => setLoading(false));
     }
   }, []);
 
@@ -87,6 +89,7 @@ export function AuthProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   return useContext(AuthContext);
 }

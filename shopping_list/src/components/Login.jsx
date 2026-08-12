@@ -21,9 +21,14 @@ const Login = () => {
   };
 
   return (
+    <main className="auth-page">
     <div className="auth-container">
-      <h2>Login</h2>
+      <Link to="/" className="auth-brand">GameScout</Link>
+      <p className="auth-kicker">WELCOME BACK</p>
+      <h1>Sign in to discover more</h1>
+      <p className="auth-subtitle">Pick up where you left off and manage your favorites.</p>
       <form onSubmit={handleSubmit}>
+        <label>Email address
         <input
           type="email"
           placeholder="Email"
@@ -31,6 +36,8 @@ const Login = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+        </label>
+        <label>Password
         <input
           type="password"
           placeholder="Password"
@@ -38,6 +45,7 @@ const Login = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+        </label>
         <button type="submit">Login</button>
         {error && <p className="error">{error}</p>}
       </form>
@@ -45,6 +53,7 @@ const Login = () => {
         Don't have an account? <Link to="/signup">Sign up</Link>
       </p>
     </div>
+    </main>
   );
 };
 

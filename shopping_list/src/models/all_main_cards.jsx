@@ -28,7 +28,7 @@ const BestGamesOfTheYear = () => {
   // Use a different category and sort by release date
   return (
     <MainCard
-      query="games?sort-by=popularity&sort-by=release-date"
+      query="games?sort-by=release-date"
       title={"Best Games of the Year"}
     />
   );

@@ -7,9 +7,10 @@ const base_url = "https://www.freetogame.com/api";
  * Generic fetch function.
  * Removes API key and page parameter (FreeToGame doesn't support pagination).
  */
-const fetchData = async (query, page = 1) => {
+const fetchData = async (query) => {
   // query is like "games" or "games?category=shooter"
   const response = await fetch(`${base_url}/${query}`);
+  if (!response.ok) throw new Error("We couldn't load games right now. Please try again.");
   const data = await response.json();
   return data;
 };
@@ -18,8 +19,8 @@ const fetchData = async (query, page = 1) => {
  * Returns a list of games with mapped fields.
  * FreeToGame returns an array directly (not inside "results").
  */
-const getGames = async (query, page = 1) => {
-  const data = await fetchData(query, page);
+const getGames = async (query) => {
+  const data = await fetchData(query);
 
   // FreeToGame API returns an array of games
   const gameData = Array.isArray(data) ? data : [];
@@ -39,6 +40,9 @@ const getGames = async (query, page = 1) => {
       // FreeToGame 'platform' is a string like "PC (Windows)"
       // Convert to array for consistency (could split if comma-separated)
       platforms: game.platform ? [game.platform] : [],
+      genre: game.genre || "Other",
+      publisher: game.publisher || "",
+      description: game.short_description || "",
     };
 
     if (item.platforms[0] === "Web Browser") {
@@ -62,6 +66,7 @@ const getGames = async (query, page = 1) => {
 const getGame = async (id, platforms) => {
   // Fetch game details from /game?id=...
   const response = await fetch(`${base_url}/game?id=${id}`);
+  if (!response.ok) throw new Error("We couldn't load this game's details.");
   const data = await response.json();
 
   if (!data || Object.keys(data).length === 0) {

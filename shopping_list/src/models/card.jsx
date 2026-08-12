@@ -1,6 +1,6 @@
 // src/components/Card.jsx
 import "./styles.css";
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext } from "react";
 import { PlatformIconGroup } from "./platforms";
 import GameCard from "./game_card";
 import { CartContext } from "./cart.jsx";
@@ -9,44 +9,19 @@ import api from "../api";
 
 const Card = ({ data }) => {
   // ---------- CART logic ----------
-  const [isAdded, setAdded] = useState(false);
-  const { cart, setCart } = useContext(CartContext);
+  const { cart, toggleCartItem } = useContext(CartContext);
+  const isAdded = cart.some((item) => item.id === data.id);
 
   const handleCartClick = (e) => {
     e.stopPropagation();
-    setAdded(!isAdded);
-    if (!isAdded) {
-      setCart([...cart, data]);
-    } else {
-      setCart(cart.filter((item) => item.id !== data.id));
-    }
+    toggleCartItem(data);
   };
-
-  useEffect(() => {
-    for (let item of cart) {
-      if (item.id === data.id) {
-        setAdded(true);
-        break;
-      }
-    }
-  }, [cart]);
 
   // ---------- FAVORITE logic ----------
   const { user, refreshPreferences } = useAuth();
 
-  // Helper: safely check if game is favorited
-  const isGameFavorited = () => {
-    const favs = user?.preferences?.favorites;
-    return Array.isArray(favs) && favs.includes(data.id);
-  };
-
-  const [isFavorited, setIsFavorited] = useState(false);
+  const isFavorited = Array.isArray(user?.preferences?.favorites) && user.preferences.favorites.includes(data.id);
   const [favLoading, setFavLoading] = useState(false);
-
-  // Keep isFavorited in sync when user or data changes
-  useEffect(() => {
-    setIsFavorited(isGameFavorited());
-  }, [user, data.id]);
 
   const handleFavoriteToggle = async (e) => {
     e.stopPropagation();
@@ -58,8 +33,6 @@ const Card = ({ data }) => {
     try {
       await api.post("/preferences/favorites/toggle", { gameId: data.id });
       await refreshPreferences();
-      // Toggle optimistically, but we also rely on refresh to update the state
-      setIsFavorited((prev) => !prev);
     } catch (err) {
       console.error("Error toggling favorite:", err);
     } finally {
@@ -79,7 +52,7 @@ const Card = ({ data }) => {
     <>
       <div className="card" style={{ display: "block" }} onClick={openModal}>
         {/* Cart button */}
-        <button className={isAdded ? "added" : ""} onClick={handleCartClick}>
+        <button className={`cart-card-button ${isAdded ? "added" : ""}`} onClick={handleCartClick} aria-label={isAdded ? "Remove from wishlist" : "Add to wishlist"}>
           {isAdded ? "✓" : "+"}
         </button>
 
@@ -88,16 +61,7 @@ const Card = ({ data }) => {
           className="favorite-btn"
           onClick={handleFavoriteToggle}
           disabled={favLoading}
-          style={{
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-            background: "transparent",
-            border: "none",
-            fontSize: "24px",
-            cursor: "pointer",
-            color: isFavorited ? "gold" : "gray",
-          }}
+          aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
         >
           {isFavorited ? "⭐" : "☆"}
         </button>

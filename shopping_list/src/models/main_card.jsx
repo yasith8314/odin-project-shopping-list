@@ -1,129 +1,102 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Card from "./card";
 import { getGames } from "./fetch";
-import { useState, useEffect, useRef, useCallback } from "react";
-import "./styles.css";
 import { SkeletonCard } from "./skeletonCard";
+import "./styles.css";
 
-const INITIAL_LOAD = 20; // Number of games to show initially
-const LOAD_INCREMENT = 20; // Number of games to add each time user scrolls to bottom
+const INITIAL_LOAD = 20;
+const LOAD_INCREMENT = 20;
 
 const MainCard = ({ query, title }) => {
-  const [fullData, setFullData] = useState([]); // All games from API
+  const [fullData, setFullData] = useState([]);
   const [displayCount, setDisplayCount] = useState(INITIAL_LOAD);
   const [loading, setLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(true);
-
-  // Ref for the sentinel element (the "trigger" at the bottom)
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [platform, setPlatform] = useState("all");
+  const [genre, setGenre] = useState("all");
+  const [sort, setSort] = useState("name");
   const observerRef = useRef(null);
   const sentinelRef = useRef(null);
 
-  // Fetch all data once when query changes
   useEffect(() => {
-    const fetchAllGames = async () => {
+    let active = true;
+    async function loadGames() {
       setLoading(true);
-      setDisplayCount(INITIAL_LOAD); // Reset display count on new query
-      const data = await getGames(query, 1); // page param ignored by FreeToGame
-      setFullData(data);
-      setHasMore(data.length > INITIAL_LOAD);
-      setLoading(false);
-    };
-
-    fetchAllGames();
+      setError("");
+      setDisplayCount(INITIAL_LOAD);
+      try {
+        const games = await getGames(query);
+        if (active) setFullData(games);
+      } catch (loadError) {
+        if (active) {
+          setFullData([]);
+          setError(loadError.message);
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    loadGames();
+    return () => { active = false; };
   }, [query]);
 
-  // Intersection Observer callback – loads more when sentinel is visible
-  const handleObserver = useCallback(
-    (entries) => {
-      const [entry] = entries;
-      if (entry.isIntersecting && hasMore && !loading) {
-        setDisplayCount((prev) => {
-          const newCount = prev + LOAD_INCREMENT;
-          if (newCount >= fullData.length) {
-            setHasMore(false);
-            return fullData.length;
-          }
-          return newCount;
-        });
-      }
-    },
-    [hasMore, loading, fullData.length],
+  const genres = useMemo(
+    () => [...new Set(fullData.map((game) => game.genre).filter(Boolean))].sort(),
+    [fullData],
   );
 
-  // Set up / clean up the observer
+  const filteredData = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return fullData
+      .filter((game) => !term || game.name.toLowerCase().includes(term))
+      .filter((game) => platform === "all" || game.platforms.includes(platform))
+      .filter((game) => genre === "all" || game.genre === genre)
+      .sort((a, b) => {
+        if (sort === "newest") return new Date(b.released) - new Date(a.released);
+        if (sort === "oldest") return new Date(a.released) - new Date(b.released);
+        return a.name.localeCompare(b.name);
+      });
+  }, [fullData, genre, platform, search, sort]);
+
+  useEffect(() => setDisplayCount(INITIAL_LOAD), [search, platform, genre, sort]);
+
+  const hasMore = displayCount < filteredData.length;
+  const handleObserver = useCallback((entries) => {
+    if (entries[0].isIntersecting) {
+      setDisplayCount((count) => Math.min(count + LOAD_INCREMENT, filteredData.length));
+    }
+  }, [filteredData.length]);
+
   useEffect(() => {
-    if (loading) return;
+    if (loading || !hasMore || !sentinelRef.current) return undefined;
+    observerRef.current?.disconnect();
+    observerRef.current = new IntersectionObserver(handleObserver, { rootMargin: "200px" });
+    observerRef.current.observe(sentinelRef.current);
+    return () => observerRef.current?.disconnect();
+  }, [handleObserver, hasMore, loading]);
 
-    // Disconnect old observer if it exists
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
-
-    // Create new observer
-    observerRef.current = new IntersectionObserver(handleObserver, {
-      root: null,
-      rootMargin: "0px 0px 100px 0px", // Trigger 100px before the bottom
-      threshold: 0.1,
-    });
-
-    if (sentinelRef.current) {
-      observerRef.current.observe(sentinelRef.current);
-    }
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [loading, handleObserver]);
-
-  // Visible slice of data
-  const visibleData = fullData.slice(0, displayCount);
-
-  // Initial loading skeleton
-  if (loading && fullData.length === 0) {
-    return (
-      <div className="main-container">
-        <h1 className="section-title">{title}</h1>
-        <div className="game-grid">
-          {[...Array(20)].map((_, i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const visibleData = filteredData.slice(0, displayCount);
 
   return (
-    <div className="main-container">
-      <h1 className="section-title">{title}</h1>
-
-      <div className="game-grid">
-        {visibleData.map((element) => (
-          <Card key={element.id} data={element} />
-        ))}
+    <section className="main-container">
+      <div className="section-heading">
+        <p className="eyebrow">DISCOVER YOUR NEXT FAVORITE</p>
+        <h1 className="section-title">{title}</h1>
       </div>
-
-      {/* Sentinel element – invisible trigger for infinite scroll */}
-      {!loading && (
-        <div ref={sentinelRef} style={{ height: "10px", margin: "10px 0" }} />
-      )}
-
-      {/* Optional loading indicator while initial fetch is in progress */}
-      {loading && fullData.length > 0 && (
-        <div className="game-grid">
-          {[...Array(5)].map((_, i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
-      )}
-
-      {/* Show "no more" message if all games are displayed */}
-      {!hasMore && fullData.length > 0 && (
-        <p style={{ textAlign: "center", padding: "20px", color: "#888" }}>
-          🎮 You've seen all {fullData.length} games!
-        </p>
-      )}
-    </div>
+      <div className="discovery-controls" aria-label="Game filters">
+        <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search games…" aria-label="Search games" />
+        <select value={platform} onChange={(event) => setPlatform(event.target.value)} aria-label="Platform"><option value="all">All platforms</option><option value="pc">PC</option><option value="web">Browser</option></select>
+        <select value={genre} onChange={(event) => setGenre(event.target.value)} aria-label="Genre"><option value="all">All genres</option>{genres.map((item) => <option key={item} value={item}>{item}</option>)}</select>
+        <select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Sort games"><option value="name">Name: A–Z</option><option value="newest">Newest releases</option><option value="oldest">Oldest releases</option></select>
+      </div>
+      {loading && !fullData.length ? <div className="game-grid">{Array.from({ length: 12 }, (_, index) => <SkeletonCard key={index} />)}</div> : null}
+      {error ? <p className="state-message error-message">{error}</p> : null}
+      {!loading && !error && !visibleData.length ? <p className="state-message">No games match these filters.</p> : null}
+      <div className="game-grid">{visibleData.map((game) => <Card key={game.id} data={game} />)}</div>
+      {hasMore ? <div ref={sentinelRef} className="scroll-sentinel" /> : null}
+      {!loading && !error && filteredData.length > 0 && !hasMore ? <p className="end-message">You've seen all {filteredData.length} games.</p> : null}
+    </section>
   );
 };
 
