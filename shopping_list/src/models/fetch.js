@@ -1,62 +1,107 @@
-//import { useQuery } from '@tanstack/react-query';
+// import { useQuery } from '@tanstack/react-query';
 
-const API_KEY = import.meta.env.VITE_RAWG_API_KEY
-const base_url = import.meta.env.VITE_BASE_URL;
+// No API key required for FreeToGame
+const base_url = "https://www.freetogame.com/api";
 
-const fetchData = async (query, page=1) => {
-    const response = await fetch(`${base_url}/${query}&key=${API_KEY}&page=${page}`)
-    const data = await response.json();
-
-    return data;
+/**
+ * Generic fetch function.
+ * Removes API key and page parameter (FreeToGame doesn't support pagination).
+ */
+const fetchData = async (query, page = 1) => {
+  // query is like "games" or "games?category=shooter"
+  const response = await fetch(`${base_url}/${query}`);
+  const data = await response.json();
+  return data;
 };
 
-const getGames = async (query, page=1) => {
-    const data = await fetchData(query, page);
+/**
+ * Returns a list of games with mapped fields.
+ * FreeToGame returns an array directly (not inside "results").
+ */
+const getGames = async (query, page = 1) => {
+  const data = await fetchData(query, page);
 
-    const games = []
-    const gameData = data['results'] || [];
+  // FreeToGame API returns an array of games
+  const gameData = Array.isArray(data) ? data : [];
 
-    for (let i = 0; i < gameData.length; i++) {
-        if (!gameData[i]['background_image']) continue;
+  const games = [];
+  for (let i = 0; i < gameData.length; i++) {
+    const game = gameData[i];
+    // Skip if no thumbnail (similar to background_image check)
+    if (!game.thumbnail) continue;
 
-        const item = {
-            'id': gameData[i]['id'],
-            'name': gameData[i]['name'],
-            'image_url': gameData[i]['background_image'],
-            'released': gameData[i]['released'],
-            'platforms': gameData[i]['parent_platforms']?.map(element => element['platform']['slug']),
-        }
-        games.push(item);
-    } 
+    // Map fields to match the old structure
+    const item = {
+      id: game.id,
+      name: game.title,
+      image_url: game.thumbnail,
+      released: game.release_date,
+      // FreeToGame 'platform' is a string like "PC (Windows)"
+      // Convert to array for consistency (could split if comma-separated)
+      platforms: game.platform ? [game.platform] : [],
+    };
 
-    return games;
-}
+    if (item.platforms[0] === "Web Browser") {
+      item.platforms[0] = "web";
+    } else if (item.platforms[0] === "PC (Windows)") {
+      item.platforms[0] = "pc";
+    } else if (item.platforms[0] === "Xbox") {
+      item.platforms[0] = "xbox";
+    }
 
-const getScreenshots = async (id) => {
-    const response = await fetch(`${base_url}/games/${id}/screenshots?key=${API_KEY}`)
-    const data = await response.json()
-    
-    if (!data) return [];
-    return data['results']?.map(element => (!element['is_deleted']) && element['image']);
-}
+    games.push(item);
+  }
 
+  return games;
+};
+
+/**
+ * No longer uses a separate screenshots endpoint;
+ * screenshots are taken from the game details response.
+ */
 const getGame = async (id, platforms) => {
-    const response = await fetch(`${base_url}/games/${id}?key=${API_KEY}`)
-    const data = await response.json()
-    const gameData = {}
+  // Fetch game details from /game?id=...
+  const response = await fetch(`${base_url}/game?id=${id}`);
+  const data = await response.json();
 
-    if (data.length == 0) return { };
+  if (!data || Object.keys(data).length === 0) {
+    return {};
+  }
 
-    gameData['name'] = data?.name || '';
-    gameData['description'] = data?.description_raw;
-    gameData['released'] = data?.released || '';
-    gameData['platforms'] = platforms;
-    gameData['images'] = [data?.background_image, data?.background_image_additional];
-    gameData['developers'] = data?.developers[0]?.name || '';
-    gameData['genres'] = data?.genres?.map(element => element?.name);
-    gameData['screenshots'] = await getScreenshots(id);
-      
-    return gameData;
-}
+  // Build the game object with the same property names as before
+  const gameData = {
+    name: data.title || "",
+    description: data.description || data.short_description || "",
+    released: data.release_date || "",
+    // Use the platforms passed from getGames (which we already mapped)
+    platforms: platforms || [],
+    // Images: use thumbnail as first, and maybe the first screenshot as second
+    images: [
+      data.thumbnail || "",
+      data.screenshots && data.screenshots.length > 0
+        ? data.screenshots[0].image
+        : "",
+    ],
+    developers: data.developer || "",
+    // Genres: convert single string to array
+    genres: data.genre ? [data.genre] : [],
+    // Screenshots: extract from the game details
+    screenshots: data.screenshots
+      ? data.screenshots.map((s) => s.image).filter(Boolean)
+      : [],
+  };
+
+  for (const key in gameData["platforms"]) {
+    if (gameData["platforms"][key].includes("Web Browser")) {
+      gameData["platforms"][key] = "web";
+    } else if (gameData["platforms"][key].includes("PC")) {
+      gameData["platforms"][key] = "pc";
+    } else if (gameData["platforms"][key].includes("Xbox")) {
+      gameData["platforms"][key] = "xbox";
+    }
+  }
+
+  return gameData;
+};
 
 export { fetchData, getGames, getGame };
