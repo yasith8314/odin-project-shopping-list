@@ -10,7 +10,6 @@ router.post("/follow/:userId", auth, async (req, res) => {
   const followedId = id(req.params.userId);
   if (!followedId || followedId === req.userId) return res.status(400).json({ error: "Choose another user." });
   await pool.query("INSERT IGNORE INTO follows (follower_id, followed_id) VALUES (?, ?)", [req.userId, followedId]);
-  await pool.query("INSERT INTO notifications (user_id, type, message) VALUES (?, 'follow', 'Someone started following you')", [followedId]);
   res.status(204).end();
 });
 router.delete("/follow/:userId", auth, async (req, res) => {

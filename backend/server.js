@@ -8,7 +8,6 @@ const reviewsRoutes = require("./routes/reviews");
 const analyticsRoutes = require("./routes/analytics");
 const socialRoutes = require("./routes/social");
 const adminRoutes = require("./routes/admin");
-const notificationRoutes = require("./routes/notifications");
 const { runMigrations } = require("./migrate");
 
 const app = express();
@@ -20,7 +19,6 @@ app.use("/api/reviews", reviewsRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/social", socialRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/notifications", notificationRoutes);
 app.use("/api", gamesRoutes);
 
 const start = async () => {
