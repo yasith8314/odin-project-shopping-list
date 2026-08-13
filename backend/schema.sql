@@ -1,5 +1,4 @@
-CREATE DATABASE IF NOT EXISTS gameapp;
-USE gameapp;
+SET FOREIGN_KEY_CHECKS = 0;
 
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -67,3 +66,5 @@ CREATE TABLE IF NOT EXISTS game_comments (
   CONSTRAINT comments_parent_fk FOREIGN KEY (parent_id) REFERENCES game_comments(id) ON DELETE CASCADE,
   INDEX comments_game_idx (game_id)
 );
+
+SET FOREIGN_KEY_CHECKS = 1;
