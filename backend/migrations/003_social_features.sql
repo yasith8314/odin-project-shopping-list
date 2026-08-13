@@ -1,4 +1,3 @@
-ALTER TABLE users ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'user';
 CREATE TABLE IF NOT EXISTS follows (
   follower_id INT NOT NULL, followed_id INT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (follower_id, followed_id),
